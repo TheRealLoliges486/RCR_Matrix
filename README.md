@@ -140,6 +140,82 @@ python3 extract_response_matrix.py \
   --order "DPhiJ0J1_m3p1416_3p1416_underflow,DPhiJ0J1_m3p1416_m1p5708,DPhiJ0J1_m1p5708_0p0,DPhiJ0J1_0p0_1p5708,DPhiJ0J1_1p5708_3p1416" \
   --category 2
 
+python3 extract_response_matrix.py \
+  --obs CosThetaStarCS \
+  --out-prefix response_matrix_combined/response_matrix_CosThetaStarCS \
+  --order "CosThetaStarCS_0p0_0p07,CosThetaStarCS_0p07_0p15,CosThetaStarCS_0p15_0p22,CosThetaStarCS_0p22_0p35,CosThetaStarCS_0p35_0p45,CosThetaStarCS_0p45_0p55,CosThetaStarCS_0p55_0p75,CosThetaStarCS_0p75_1p0" \
+  --category 0
+
+python3 extract_response_matrix.py \
+  --obs CosThetaStarCS \
+  --out-prefix response_matrix_combined/response_matrix_CosThetaStarCS \
+  --order "CosThetaStarCS_0p0_0p07,CosThetaStarCS_0p07_0p15,CosThetaStarCS_0p15_0p22,CosThetaStarCS_0p22_0p35,CosThetaStarCS_0p35_0p45,CosThetaStarCS_0p45_0p55,CosThetaStarCS_0p55_0p75,CosThetaStarCS_0p75_1p0" \
+  --category 1
+
+python3 extract_response_matrix.py \
+  --obs CosThetaStarCS \
+  --out-prefix response_matrix_combined/response_matrix_CosThetaStarCS \
+  --order "CosThetaStarCS_0p0_0p07,CosThetaStarCS_0p07_0p15,CosThetaStarCS_0p15_0p22,CosThetaStarCS_0p22_0p35,CosThetaStarCS_0p35_0p45,CosThetaStarCS_0p45_0p55,CosThetaStarCS_0p55_0p75,CosThetaStarCS_0p75_1p0" \
+  --category 2
+
+  python3 extract_response_matrix.py \
+  --obs MassJ0J1 \
+  --out-prefix response_matrix_combined/response_matrix_MassJ0J1 \
+  --order "MassJ0J1_m10000p0_0p0,MassJ0J1_0p0_90p0,MassJ0J1_90p0_160p0,MassJ0J1_160p0_300p0,MassJ0J1_300p0_500p0,MassJ0J1_500p0_1000p0,MassJ0J1_1000p0_10000p0" \
+  --category 0
+
+python3 extract_response_matrix.py \
+  --obs MassJ0J1 \
+  --out-prefix response_matrix_combined/response_matrix_MassJ0J1 \
+  --order "MassJ0J1_m10000p0_0p0,MassJ0J1_0p0_90p0,MassJ0J1_90p0_160p0,MassJ0J1_160p0_300p0,MassJ0J1_300p0_500p0,MassJ0J1_500p0_1000p0,MassJ0J1_1000p0_10000p0" \
+  --category 1
+
+python3 extract_response_matrix.py \
+  --obs MassJ0J1 \
+  --out-prefix response_matrix_combined/response_matrix_MassJ0J1 \
+  --order "MassJ0J1_m10000p0_0p0,MassJ0J1_0p0_90p0,MassJ0J1_90p0_160p0,MassJ0J1_160p0_300p0,MassJ0J1_300p0_500p0,MassJ0J1_500p0_1000p0,MassJ0J1_1000p0_10000p0" \
+  --category 2
+
+# I used these ones to compute the condition number of the response matrices:
+
+python3 extract_response_matrix.py \
+  --obs PTJ1 \
+  --out-prefix response_matrix_combined/response_matrix_PTJ1 \
+  --order "PTJ1_m10000p0_30p0,PTJ1_30p0_45p0,PTJ1_45p0_65p0,PTJ1_65p0_90p0,PTJ1_90p0_150p0,PTJ1_150p0_10000p0" \
+  --category 0
+
+python3 extract_response_matrix.py \
+  --obs PTJ1 \
+  --out-prefix response_matrix_combined/response_matrix_PTJ1 \
+  --order "PTJ1_m10000p0_30p0,PTJ1_30p0_45p0,PTJ1_45p0_65p0,PTJ1_65p0_90p0,PTJ1_90p0_150p0,PTJ1_150p0_10000p0" \
+  --category 1
+
+python3 extract_response_matrix.py \
+  --obs PTJ1 \
+  --out-prefix response_matrix_combined/response_matrix_PTJ1 \
+  --order "PTJ1_m10000p0_30p0,PTJ1_30p0_45p0,PTJ1_45p0_65p0,PTJ1_65p0_90p0,PTJ1_90p0_150p0,PTJ1_150p0_10000p0" \
+  --category 2
+
+
+python3 extract_response_matrix.py \
+  --obs YJ0 \
+  --out-prefix response_matrix_combined/response_matrix_YJ0 \
+  --order "YJ0_m10000p0_0p0,YJ0_0p0_0p3,YJ0_0p3_0p6,YJ0_0p6_0p9,YJ0_0p9_1p2,YJ0_1p2_1p6,YJ0_1p6_2p0,YJ0_2p0_2p5" \
+  --category 0
+
+python3 extract_response_matrix.py \
+  --obs YJ0 \
+  --out-prefix response_matrix_combined/response_matrix_YJ0 \
+  --order "YJ0_m10000p0_0p0,YJ0_0p0_0p3,YJ0_0p3_0p6,YJ0_0p6_0p9,YJ0_0p9_1p2,YJ0_1p2_1p6,YJ0_1p6_2p0,YJ0_2p0_2p5" \
+  --category 1
+
+python3 extract_response_matrix.py \
+  --obs YJ0 \
+  --out-prefix response_matrix_combined/response_matrix_YJ0 \
+  --order "YJ0_m10000p0_0p0,YJ0_0p0_0p3,YJ0_0p3_0p6,YJ0_0p6_0p9,YJ0_0p9_1p2,YJ0_1p2_1p6,YJ0_1p6_2p0,YJ0_2p0_2p5" \
+  --category 2
+
+
 ```
 
 The response matrices can also be computed individually, although this is outdated and not used for the derivation of the EFT results. One need the signal models for it to work.

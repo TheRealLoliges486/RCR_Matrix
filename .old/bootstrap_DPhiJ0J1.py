@@ -1,0 +1,321 @@
+#!/usr/bin/env python3
+#python bootstrap.py
+#If your mass column is not called mass (e.g. mgg), run: python bootstrap.py --mass-column mgg
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+try:
+    from tqdm import tqdm
+except ImportError:
+    tqdm = None
+
+YEARS = ["2022", "2023", "2024"]
+
+INPUT_DIRS = {
+    "2022": "/pnfs/psi.ch/cms/trivcat/store/user/niharrin/ntuples/midRun3/samples/2026_04_27_with_Zmmg_SaS/data/2022",
+    "2023": "/pnfs/psi.ch/cms/trivcat/store/user/niharrin/ntuples/midRun3/samples/2026_04_27_with_Zmmg_SaS/data/2023",
+    "2024": "/pnfs/psi.ch/cms/trivcat/store/user/niharrin/ntuples/midRun3/samples/2026_04_27_with_Zmmg_SaS/data/2024"
+}
+
+BINS_DPHIJ0J1 = [-10000, -3.1415926, -1.570796, 0.0, 1.570796, 3.1415926]
+
+DPHIJ0J1_COLUMN = "DPhiJ0J1"
+
+CAT = {
+    "2022": [0.0105, 0.013, 0.0315],
+    "2023": [0.011, 0.0145, 0.0315],
+    "2024": [0.0115, 0.0175, 0.0315]
+}
+CAT_VAR = "sigma_m_over_m_smeared_decorr"
+
+MVA = {
+    "2022": 0.25,
+    "2023": 0.19,
+    "2024": 0.24
+}
+
+def edge_bin_mask(x: np.ndarray, edges: np.ndarray, b: int, column: str) -> np.ndarray:
+    """Bin b: [edges[b], edges[b+1]) except last bin [edges[-2], edges[-1]] closed on the right."""
+    lo = float(edges[b])
+    hi = float(edges[b + 1])
+    if b == len(edges) - 2:
+        if column == "rapidity":
+            return (np.abs(x) >= lo) & (np.abs(x) <= hi)
+        else:
+            return (x >= lo) & (x <= hi)
+    if column == "rapidity":
+        return (np.abs(x) >= lo) & (np.abs(x) < hi)
+    else:
+        return (x >= lo) & (x < hi)
+
+
+def write_binned_counts_txt(
+    path: Path,
+    header_comment: str,
+    edges: np.ndarray,
+    counts: np.ndarray,
+) -> None:
+    """counts shape (n_bins, n_replicas)."""
+    n_bins, n_rep = counts.shape
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        f.write(header_comment.rstrip() + "\n")
+        f.write("# edges " + " ".join(str(float(x)) for x in edges) + "\n")
+        f.write(f"# n_bins {n_bins}\n")
+        f.write("# replica_idx " + " ".join(f"bin{b}" for b in range(n_bins)) + "\n")
+        for r in range(n_rep):
+            f.write(
+                str(r)
+                + " "
+                + " ".join(str(int(counts[b, r])) for b in range(n_bins))
+                + "\n"
+            )
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Read parquet files recursively, keep sidebands, and assign "
+            "N Poisson(1) bootstrap weights per event; each event uses one "
+            "seed derived from run/lumi/event."
+        )
+    )
+    parser.add_argument(
+        "--mass-column",
+        default="mass",
+        help="Column name containing diphoton mass.",
+    )
+    parser.add_argument(
+        "--low-cut",
+        type=float,
+        default=115.0,
+        help="Lower sideband cut (keep events below this value).",
+    )
+    parser.add_argument(
+        "--high-cut",
+        type=float,
+        default=130.0,
+        help="Upper sideband cut (keep events above this value).",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("bootstrap_sideband_counts.txt"),
+        help="Output txt file with sideband event count per bootstrap replica.",
+    )
+    parser.add_argument(
+        "--run-column",
+        default="run",
+        help="Parquet column for run number.",
+    )
+    parser.add_argument(
+        "--lumi-column",
+        default="lumi",
+        help="Parquet column for luminosity block (LS).",
+    )
+    parser.add_argument(
+        "--event-column",
+        default="event",
+        help="Parquet column for event number.",
+    )
+    parser.add_argument(
+        "--seed-offset",
+        type=int,
+        default=0,
+        help=(
+            "Optional extra entropy XORed into the per-event seed (e.g. to "
+            "define independent bootstrap replicates while keeping run/lumi/event)."
+        ),
+    )
+    parser.add_argument(
+        "--n-replicas",
+        type=int,
+        default=100,
+        help=(
+            "Number of independent Poisson(1) bootstrap weights per event "
+            "(used to build sideband event count for each replica)."
+        ),
+    )
+    return parser.parse_args()
+
+
+def collect_parquet_files(base_dir: Path) -> list[Path]:
+    return sorted(base_dir.rglob("*.parquet"))
+
+
+def seeds_from_run_lumi_event(
+    run: np.ndarray,
+    lumi: np.ndarray,
+    event: np.ndarray,
+    seed_offset: int,
+) -> np.ndarray:
+    """
+    Deterministic 32-bit seed per row from (run, lumi, event).
+    Does not use Python's hash() (not stable across processes).
+    """
+    r = np.asarray(run, dtype=np.uint64)
+    l = np.asarray(lumi, dtype=np.uint64)
+    e = np.asarray(event, dtype=np.uint64)
+    # Mix into a single word (FNV-1a style constants)
+    x = np.uint64(14695981039346656037)
+    x = (x ^ r) * np.uint64(1099511628211)
+    x = (x ^ l) * np.uint64(1099511628211)
+    x = (x ^ e) * np.uint64(1099511628211)
+    x = x ^ np.uint64(seed_offset & 0xFFFFFFFFFFFFFFFF)
+    return (x & np.uint64(0xFFFFFFFF)).astype(np.uint64)
+
+
+def poisson1_n_per_seed(seeds: np.ndarray, n_replicas: int) -> np.ndarray:
+    """Draw N Poisson(1) values from each event-specific RNG seed."""
+    out = np.empty((len(seeds), n_replicas), dtype=np.int64)
+    for i, s in enumerate(seeds):
+        out[i, :] = np.random.default_rng(int(s)).poisson(1.0, size=n_replicas)
+    return out
+
+
+def main() -> None:
+    args = parse_args()
+    if args.n_replicas < 1:
+        raise ValueError("--n-replicas must be >= 1")
+
+    for i, year in enumerate(YEARS):
+        
+        print(f"Now processing year {year}...")
+        
+        current_input_dir = Path(INPUT_DIRS[year])
+
+        parquet_files = collect_parquet_files(current_input_dir)
+
+        if not parquet_files:
+            raise FileNotFoundError(f"No parquet files found under {current_input_dir}")
+
+        id_cols = (args.run_column, args.lumi_column, args.event_column)
+        edges_DPhiJ0J1 = np.asarray(BINS_DPHIJ0J1, dtype=np.float64)
+        n_bins_DPhiJ0J1 = len(edges_DPhiJ0J1) - 1
+
+        total_events = 0
+        total_sideband_events = 0
+        replica_counts = np.zeros(args.n_replicas, dtype=np.int32)
+        replica_counts_DPhiJ0J1_cat0 = np.zeros((n_bins_DPhiJ0J1, args.n_replicas), dtype=np.int32)
+        replica_counts_DPhiJ0J1_cat1 = np.zeros((n_bins_DPhiJ0J1, args.n_replicas), dtype=np.int32)
+        replica_counts_DPhiJ0J1_cat2 = np.zeros((n_bins_DPhiJ0J1, args.n_replicas), dtype=np.int32)
+
+        iterator = parquet_files
+        if tqdm is not None:
+            iterator = tqdm(parquet_files, desc="Processing parquet files", unit="file")
+        else:
+            print(f"Processing {len(parquet_files)} parquet files...")
+
+        for i, path in enumerate(iterator, start=1):
+            if tqdm is None:
+                print(f"[{i}/{len(parquet_files)}] {path.name}")
+            df = pd.read_parquet(path)
+            #Check that all columns are there in the parquet file
+            if args.mass_column not in df.columns:
+                raise KeyError(
+                    f"Mass column '{args.mass_column}' not found in file: {path}"
+                )
+            for c in id_cols:
+                if c not in df.columns:
+                    raise KeyError(
+                        f"Column '{c}' not found in file: {path}"
+                    )
+            for col, label in (
+                (DPHIJ0J1_COLUMN, "DPhiJ0J1"),
+            ):
+                if col not in df.columns:
+                    raise KeyError(
+                        f"Column '{col}' ({label}) not found in file: {path}"
+                    )
+            total_events += len(df)
+            mask = ((df[args.mass_column] < args.low_cut) | (df[args.mass_column] > args.high_cut)) & (df[args.mass_column] < 180) & (df[args.mass_column] > 100) & (df["lead_mvaID"] > MVA[year]) & (df["sublead_mvaID"] > MVA[year])
+            df_sb = df.loc[mask].copy()
+
+            if df_sb.empty:
+                continue
+
+            n_sb = len(df_sb)
+            r = df_sb[args.run_column].to_numpy()
+            lum = df_sb[args.lumi_column].to_numpy()
+            ev = df_sb[args.event_column].to_numpy()
+            ## seeds is a 1D array that holds the seed for every sideband event
+            seeds = seeds_from_run_lumi_event(r, lum, ev, args.seed_offset)
+            ## weight_matrix is a 2D array that holds the bootstrap weights for every sideband event and every replica
+            ## rows (n_sb) -> onw row per event that passed the sideband cut
+            ## columns (args.n_replicas) -> one column per replica
+            weight_matrix = poisson1_n_per_seed(seeds, args.n_replicas)
+            replica_counts += weight_matrix.sum(axis=0)
+
+            sigma_m_over_m = df_sb[CAT_VAR].to_numpy(dtype=np.float64)
+            NJ = df_sb["NJ"].to_numpy(dtype=np.float64)
+            MassJ0J1 = df_sb["MassJ0J1"].to_numpy(dtype=np.float64)
+            EtaJ0J1 = df_sb["EtaJ0J1"].to_numpy(dtype=np.float64)
+            DPhiJ0J1 = df_sb[DPHIJ0J1_COLUMN].to_numpy(dtype=np.float64)
+            finite_DPhiJ0J1 = np.isfinite(DPhiJ0J1)
+            for b in range(n_bins_DPhiJ0J1):
+                m_cat0 = finite_DPhiJ0J1 & (sigma_m_over_m < CAT[year][0])
+                m_cat1 = finite_DPhiJ0J1 & (sigma_m_over_m >= CAT[year][0]) & (sigma_m_over_m < CAT[year][1])
+                m_cat2 = finite_DPhiJ0J1 & (sigma_m_over_m >= CAT[year][1]) & (sigma_m_over_m < CAT[year][2])
+                if b == 0:
+                    # underflow bin
+                    m_cat0 = m_cat0 & ((NJ < 2) | ((NJ > 1) & (MassJ0J1 <= 450)) | ((NJ > 1) & (MassJ0J1 > 450)) & (EtaJ0J1 > -3.0) & (EtaJ0J1 <= 3.0)) 
+                    m_cat1 = m_cat1 & ((NJ < 2) | ((NJ > 1) & (MassJ0J1 <= 450)) | ((NJ > 1) & (MassJ0J1 > 450)) & (EtaJ0J1 > -3.0) & (EtaJ0J1 <= 3.0)) 
+                    m_cat2 = m_cat2 & ((NJ < 2) | ((NJ > 1) & (MassJ0J1 <= 450)) | ((NJ > 1) & (MassJ0J1 > 450)) & (EtaJ0J1 > -3.0) & (EtaJ0J1 <= 3.0)) 
+                else: 
+                    # any other bin (apply VBF cuts)
+                    m_cat0 = m_cat0 & edge_bin_mask(DPhiJ0J1, edges_DPhiJ0J1, b, DPHIJ0J1_COLUMN) & (NJ > 1) & (MassJ0J1 > 450) & ((EtaJ0J1 > 3.0) | (EtaJ0J1 < -3.0))
+                    m_cat1 = m_cat1 & edge_bin_mask(DPhiJ0J1, edges_DPhiJ0J1, b, DPHIJ0J1_COLUMN) & (NJ > 1) & (MassJ0J1 > 450) & ((EtaJ0J1 > 3.0) | (EtaJ0J1 < -3.0))
+                    m_cat2 = m_cat2 & edge_bin_mask(DPhiJ0J1, edges_DPhiJ0J1, b, DPHIJ0J1_COLUMN) & (NJ > 1) & (MassJ0J1 > 450) & ((EtaJ0J1 > 3.0) | (EtaJ0J1 < -3.0))
+                replica_counts_DPhiJ0J1_cat0[b] += weight_matrix[m_cat0].sum(axis=0)
+                replica_counts_DPhiJ0J1_cat1[b] += weight_matrix[m_cat1].sum(axis=0)
+                replica_counts_DPhiJ0J1_cat2[b] += weight_matrix[m_cat2].sum(axis=0)
+
+
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+
+        output_with_year = (
+            args.output.parent
+            / f"{args.output.stem}_{year}{args.output.suffix}"
+        )
+
+        with output_with_year.open("w", encoding="utf-8") as f:
+            f.write("# inclusive: sum of Poisson(1) weights in sidebands per replica\n")
+            f.write("# replica_index sideband_event_count\n")
+            for idx, count in enumerate(replica_counts):
+                f.write(f"{idx} {int(count)}\n")
+
+        stem = args.output.stem
+        parent = args.output.parent
+        DPhiJ0J1_cat0_path = parent / f"{stem}_DPhiJ0J1_cat0_{year}.txt"
+        DPhiJ0J1_cat1_path = parent / f"{stem}_DPhiJ0J1_cat1_{year}.txt"
+        DPhiJ0J1_cat2_path = parent / f"{stem}_DPhiJ0J1_cat2_{year}.txt"
+        write_binned_counts_txt(
+            DPhiJ0J1_cat0_path,
+            "# Rapidity bins (column DPhiJ0J1); sum of Poisson weights per bin per replica",
+            edges_DPhiJ0J1,
+            replica_counts_DPhiJ0J1_cat0,
+        )
+        write_binned_counts_txt(
+            DPhiJ0J1_cat1_path,
+            "# Rapidity bins (column DPhiJ0J1); sum of Poisson weights per bin per replica",
+            edges_DPhiJ0J1,
+            replica_counts_DPhiJ0J1_cat1,
+        )
+        write_binned_counts_txt(
+            DPhiJ0J1_cat2_path,
+            "# Rapidity bins (column DPhiJ0J1); sum of Poisson weights per bin per replica",
+            edges_DPhiJ0J1,
+            replica_counts_DPhiJ0J1_cat2,
+        )
+
+        print(f"Rapidity-cat0-binned output : {DPhiJ0J1_cat0_path}")
+        print(f"Rapidity-cat1-binned output : {DPhiJ0J1_cat1_path}")
+        print(f"Rapidity-cat2-binned output : {DPhiJ0J1_cat2_path}")
+
+
+if __name__ == "__main__":
+    main()

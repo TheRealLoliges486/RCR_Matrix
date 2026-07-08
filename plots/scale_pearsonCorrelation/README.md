@@ -1,1 +1,0 @@
-Used the pearson correlation when deriving the scale covariance.

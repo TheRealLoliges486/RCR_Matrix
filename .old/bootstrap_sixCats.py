@@ -26,16 +26,12 @@ BINS_NJ = [0, 1, 2, 3, 4, 1000]
 BINS_RAPIDITY = [0.0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.90, 1.2, 1.6, 2.0, 2.5]
 BINS_PTJ0 = [-10000, 30, 40, 55, 75, 95, 120, 150, 200, 10000]
 BINS_DPHIJ0J1 = [-10000, -3.1415926, -1.570796, 0.0, 1.570796, 3.1415926]
-BINS_COSTHETASTARCS = [0.0, 0.07, 0.15, 0.22, 0.35, 0.45, 0.55, 0.75, 1.0]
-BINS_MASSJ0J1 = [-10000.0, 0.0, 90.0, 160.0, 300.0, 500.0, 1000.0, 10000]
 
 PTH_COLUMN = "pt"
 NJ_COLUMN = "NJ"
 RAPIDITY_COLUMN = "rapidity"
 PTJ0_COLUMN = "PTJ0"
 DPHIJ0J1_COLUMN = "DPhiJ0J1"
-COSTHETASTARCS_COLUMN = "CosThetaStarCS"
-MASSJ0J1_COLUMN = "MassJ0J1"
 
 CAT = {
     "2022": [0.0105, 0.013, 0.0315],
@@ -62,11 +58,11 @@ def edge_bin_mask(x: np.ndarray, edges: np.ndarray, b: int, column: str) -> np.n
     lo = float(edges[b])
     hi = float(edges[b + 1])
     if b == len(edges) - 2:
-        if (column == "rapidity") or (column == "CosThetaStarCS"):
+        if column == "rapidity":
             return (np.abs(x) >= lo) & (np.abs(x) <= hi)
         else:
             return (x >= lo) & (x <= hi)
-    if (column == "rapidity") or (column == "CosThetaStarCS"):
+    if column == "rapidity":
         return (np.abs(x) >= lo) & (np.abs(x) < hi)
     else:
         return (x >= lo) & (x < hi)
@@ -223,10 +219,6 @@ def main() -> None:
         n_bins_ptj0 = len(edges_ptj0) - 1
         edges_DPhiJ0J1 = np.asarray(BINS_DPHIJ0J1, dtype=np.float64)
         n_bins_DPhiJ0J1 = len(edges_DPhiJ0J1) - 1
-        edges_CosThetaStarCS = np.asarray(BINS_COSTHETASTARCS, dtype=np.float64)
-        n_bins_CosThetaStarCS = len(edges_CosThetaStarCS) - 1
-        edges_MassJ0J1 = np.asarray(BINS_MASSJ0J1, dtype=np.float64)
-        n_bins_MassJ0J1 = len(edges_MassJ0J1) - 1
 
         total_events = 0
         total_sideband_events = 0
@@ -234,25 +226,33 @@ def main() -> None:
         replica_counts_pth_cat0 = np.zeros((n_bins_pth, args.n_replicas), dtype=np.int32)
         replica_counts_pth_cat1 = np.zeros((n_bins_pth, args.n_replicas), dtype=np.int32)
         replica_counts_pth_cat2 = np.zeros((n_bins_pth, args.n_replicas), dtype=np.int32)
+        replica_counts_pth_cat3 = np.zeros((n_bins_pth, args.n_replicas), dtype=np.int32)
+        replica_counts_pth_cat4 = np.zeros((n_bins_pth, args.n_replicas), dtype=np.int32)
+        replica_counts_pth_cat5 = np.zeros((n_bins_pth, args.n_replicas), dtype=np.int32)
         replica_counts_nj_cat0 = np.zeros((n_bins_nj, args.n_replicas), dtype=np.int32)
         replica_counts_nj_cat1 = np.zeros((n_bins_nj, args.n_replicas), dtype=np.int32)
         replica_counts_nj_cat2 = np.zeros((n_bins_nj, args.n_replicas), dtype=np.int32)
+        replica_counts_nj_cat3 = np.zeros((n_bins_nj, args.n_replicas), dtype=np.int32)
+        replica_counts_nj_cat4 = np.zeros((n_bins_nj, args.n_replicas), dtype=np.int32)
+        replica_counts_nj_cat5 = np.zeros((n_bins_nj, args.n_replicas), dtype=np.int32)
         replica_counts_rapidity_cat0 = np.zeros((n_bins_rapidity, args.n_replicas), dtype=np.int32)
         replica_counts_rapidity_cat1 = np.zeros((n_bins_rapidity, args.n_replicas), dtype=np.int32)
         replica_counts_rapidity_cat2 = np.zeros((n_bins_rapidity, args.n_replicas), dtype=np.int32)
+        replica_counts_rapidity_cat3 = np.zeros((n_bins_rapidity, args.n_replicas), dtype=np.int32)
+        replica_counts_rapidity_cat4 = np.zeros((n_bins_rapidity, args.n_replicas), dtype=np.int32)
+        replica_counts_rapidity_cat5 = np.zeros((n_bins_rapidity, args.n_replicas), dtype=np.int32)
         replica_counts_ptj0_cat0 = np.zeros((n_bins_ptj0, args.n_replicas), dtype=np.int32)
         replica_counts_ptj0_cat1 = np.zeros((n_bins_ptj0, args.n_replicas), dtype=np.int32)
         replica_counts_ptj0_cat2 = np.zeros((n_bins_ptj0, args.n_replicas), dtype=np.int32)
+        replica_counts_ptj0_cat3 = np.zeros((n_bins_ptj0, args.n_replicas), dtype=np.int32)
+        replica_counts_ptj0_cat4 = np.zeros((n_bins_ptj0, args.n_replicas), dtype=np.int32)
+        replica_counts_ptj0_cat5 = np.zeros((n_bins_ptj0, args.n_replicas), dtype=np.int32)
         replica_counts_DPhiJ0J1_cat0 = np.zeros((n_bins_DPhiJ0J1, args.n_replicas), dtype=np.int32)
         replica_counts_DPhiJ0J1_cat1 = np.zeros((n_bins_DPhiJ0J1, args.n_replicas), dtype=np.int32)
         replica_counts_DPhiJ0J1_cat2 = np.zeros((n_bins_DPhiJ0J1, args.n_replicas), dtype=np.int32)
-        replica_counts_CosThetaStarCS_cat0 = np.zeros((n_bins_CosThetaStarCS, args.n_replicas), dtype=np.int32)
-        replica_counts_CosThetaStarCS_cat1 = np.zeros((n_bins_CosThetaStarCS, args.n_replicas), dtype=np.int32)
-        replica_counts_CosThetaStarCS_cat2 = np.zeros((n_bins_CosThetaStarCS, args.n_replicas), dtype=np.int32)
-        replica_counts_MassJ0J1_cat0 = np.zeros((n_bins_MassJ0J1, args.n_replicas), dtype=np.int32)
-        replica_counts_MassJ0J1_cat1 = np.zeros((n_bins_MassJ0J1, args.n_replicas), dtype=np.int32)
-        replica_counts_MassJ0J1_cat2 = np.zeros((n_bins_MassJ0J1, args.n_replicas), dtype=np.int32)
-
+        replica_counts_DPhiJ0J1_cat3 = np.zeros((n_bins_DPhiJ0J1, args.n_replicas), dtype=np.int32)
+        replica_counts_DPhiJ0J1_cat4 = np.zeros((n_bins_DPhiJ0J1, args.n_replicas), dtype=np.int32)
+        replica_counts_DPhiJ0J1_cat5 = np.zeros((n_bins_DPhiJ0J1, args.n_replicas), dtype=np.int32)
 
         iterator = parquet_files
         if tqdm is not None:
@@ -279,8 +279,6 @@ def main() -> None:
                 (NJ_COLUMN, "NJ"),
                 (RAPIDITY_COLUMN, "rapidity"),
                 (PTJ0_COLUMN, "PTJ0"),
-                (COSTHETASTARCS_COLUMN, "CosThetaStarCS"),
-                (MASSJ0J1_COLUMN, "MassJ0J1"),
             ):
                 if col not in df.columns:
                     raise KeyError(
@@ -307,10 +305,9 @@ def main() -> None:
 
             sigma_m_over_m = df_sb[CAT_VAR].to_numpy(dtype=np.float64)
             pt = df_sb[PTH_COLUMN].to_numpy(dtype=np.float64)
-            MassJ0J1 = df_sb[MASSJ0J1_COLUMN].to_numpy(dtype=np.float64)
+            MassJ0J1 = df_sb["MassJ0J1"].to_numpy(dtype=np.float64)
             EtaJ0J1 = df_sb["EtaJ0J1"].to_numpy(dtype=np.float64)
             DPhiJ0J1 = df_sb[DPHIJ0J1_COLUMN].to_numpy(dtype=np.float64)
-            CosThetaStarCS = df_sb[COSTHETASTARCS_COLUMN].to_numpy(dtype=np.float64)
             finite_pt = np.isfinite(pt)
             for b in range(n_bins_pth):
                 m_cat0 = finite_pt & edge_bin_mask(pt, edges_pth, b, PTH_COLUMN) & (sigma_m_over_m < CAT[year][0])
@@ -335,9 +332,13 @@ def main() -> None:
             finite_rapidity = np.isfinite(rapidity)
             for b in range(n_bins_rapidity):
                 if b > 6:
-                    m_cat0 = finite_rapidity & edge_bin_mask(rapidity, edges_rapidity, b, RAPIDITY_COLUMN) & (sigma_m_over_m < CAT_RAPIDITY[year][0])
-                    m_cat1 = finite_rapidity & edge_bin_mask(rapidity, edges_rapidity, b, RAPIDITY_COLUMN) & (sigma_m_over_m >= CAT_RAPIDITY[year][0]) & (sigma_m_over_m < CAT_RAPIDITY[year][1])
-                    m_cat2 = finite_rapidity & edge_bin_mask(rapidity, edges_rapidity, b, RAPIDITY_COLUMN) & (sigma_m_over_m >= CAT_RAPIDITY[year][1]) & (sigma_m_over_m < CAT_RAPIDITY[year][2])
+                    m_cat3 = finite_rapidity & edge_bin_mask(rapidity, edges_rapidity, b, RAPIDITY_COLUMN) & (sigma_m_over_m < CAT_RAPIDITY[year][0])
+                    m_cat4 = finite_rapidity & edge_bin_mask(rapidity, edges_rapidity, b, RAPIDITY_COLUMN) & (sigma_m_over_m >= CAT_RAPIDITY[year][0]) & (sigma_m_over_m < CAT_RAPIDITY[year][1])
+                    m_cat5 = finite_rapidity & edge_bin_mask(rapidity, edges_rapidity, b, RAPIDITY_COLUMN) & (sigma_m_over_m >= CAT_RAPIDITY[year][1]) & (sigma_m_over_m < CAT_RAPIDITY[year][2])
+                    replica_counts_rapidity_cat3[b] += weight_matrix[m_cat3].sum(axis=0)
+                    replica_counts_rapidity_cat4[b] += weight_matrix[m_cat4].sum(axis=0)
+                    replica_counts_rapidity_cat5[b] += weight_matrix[m_cat5].sum(axis=0)
+                    continue
                 else:
                     m_cat0 = finite_rapidity & edge_bin_mask(rapidity, edges_rapidity, b, RAPIDITY_COLUMN) & (sigma_m_over_m < CAT[year][0])
                     m_cat1 = finite_rapidity & edge_bin_mask(rapidity, edges_rapidity, b, RAPIDITY_COLUMN) & (sigma_m_over_m >= CAT[year][0]) & (sigma_m_over_m < CAT[year][1])
@@ -345,6 +346,7 @@ def main() -> None:
                 replica_counts_rapidity_cat0[b] += weight_matrix[m_cat0].sum(axis=0)
                 replica_counts_rapidity_cat1[b] += weight_matrix[m_cat1].sum(axis=0)
                 replica_counts_rapidity_cat2[b] += weight_matrix[m_cat2].sum(axis=0)
+                
 
             ptj0 = df_sb[PTJ0_COLUMN].to_numpy(dtype=np.float64)
             finite_ptj0 = np.isfinite(ptj0)
@@ -385,35 +387,6 @@ def main() -> None:
                 replica_counts_DPhiJ0J1_cat0[b] += weight_matrix[m_cat0].sum(axis=0)
                 replica_counts_DPhiJ0J1_cat1[b] += weight_matrix[m_cat1].sum(axis=0)
                 replica_counts_DPhiJ0J1_cat2[b] += weight_matrix[m_cat2].sum(axis=0)
-            
-            finite_CosThetaStarCS = np.isfinite(CosThetaStarCS)
-            for b in range(n_bins_CosThetaStarCS):
-                m_cat0 = finite_CosThetaStarCS & edge_bin_mask(CosThetaStarCS, edges_CosThetaStarCS, b, COSTHETASTARCS_COLUMN) & (sigma_m_over_m < CAT[year][0])
-                m_cat1 = finite_CosThetaStarCS & edge_bin_mask(CosThetaStarCS, edges_CosThetaStarCS, b, COSTHETASTARCS_COLUMN) & (sigma_m_over_m >= CAT[year][0]) & (sigma_m_over_m < CAT[year][1])
-                m_cat2 = finite_CosThetaStarCS & edge_bin_mask(CosThetaStarCS, edges_CosThetaStarCS, b, COSTHETASTARCS_COLUMN) & (sigma_m_over_m >= CAT[year][1]) & (sigma_m_over_m < CAT[year][2])
-                replica_counts_CosThetaStarCS_cat0[b] += weight_matrix[m_cat0].sum(axis=0)
-                replica_counts_CosThetaStarCS_cat1[b] += weight_matrix[m_cat1].sum(axis=0)
-                replica_counts_CosThetaStarCS_cat2[b] += weight_matrix[m_cat2].sum(axis=0)
-
-            finite_MassJ0J1 = np.isfinite(MassJ0J1)
-            for b in range(n_bins_MassJ0J1):
-                m_cat0 = finite_MassJ0J1 & (sigma_m_over_m < CAT[year][0])
-                m_cat1 = finite_MassJ0J1 & (sigma_m_over_m >= CAT[year][0]) & (sigma_m_over_m < CAT[year][1])
-                m_cat2 = finite_MassJ0J1 & (sigma_m_over_m >= CAT[year][1]) & (sigma_m_over_m < CAT[year][2])
-
-                if b == 0:
-                    # underflow bin
-                    m_cat0 = m_cat0 & ((nj < 2)) 
-                    m_cat1 = m_cat1 & ((nj < 2)) 
-                    m_cat2 = m_cat2 & ((nj < 2)) 
-                else: 
-                    # any other bin (apply NO VBF cuts)
-                    m_cat0 = m_cat0 & edge_bin_mask(MassJ0J1, edges_MassJ0J1, b, MASSJ0J1_COLUMN) & (nj > 1)
-                    m_cat1 = m_cat1 & edge_bin_mask(MassJ0J1, edges_MassJ0J1, b, MASSJ0J1_COLUMN) & (nj > 1)
-                    m_cat2 = m_cat2 & edge_bin_mask(MassJ0J1, edges_MassJ0J1, b, MASSJ0J1_COLUMN) & (nj > 1)
-                replica_counts_MassJ0J1_cat0[b] += weight_matrix[m_cat0].sum(axis=0)
-                replica_counts_MassJ0J1_cat1[b] += weight_matrix[m_cat1].sum(axis=0)
-                replica_counts_MassJ0J1_cat2[b] += weight_matrix[m_cat2].sum(axis=0)
 
 
         args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -434,24 +407,33 @@ def main() -> None:
         pth_cat0_path = parent / f"{stem}_pth_cat0_{year}.txt"
         pth_cat1_path = parent / f"{stem}_pth_cat1_{year}.txt"
         pth_cat2_path = parent / f"{stem}_pth_cat2_{year}.txt"
+        pth_cat3_path = parent / f"{stem}_pth_cat3_{year}.txt"
+        pth_cat4_path = parent / f"{stem}_pth_cat4_{year}.txt"
+        pth_cat5_path = parent / f"{stem}_pth_cat5_{year}.txt"
         nj_cat0_path = parent / f"{stem}_nj_cat0_{year}.txt"
         nj_cat1_path = parent / f"{stem}_nj_cat1_{year}.txt"
         nj_cat2_path = parent / f"{stem}_nj_cat2_{year}.txt"
+        nj_cat3_path = parent / f"{stem}_nj_cat3_{year}.txt"
+        nj_cat4_path = parent / f"{stem}_nj_cat4_{year}.txt"
+        nj_cat5_path = parent / f"{stem}_nj_cat5_{year}.txt"
         rapidity_cat0_path = parent / f"{stem}_rapidity_cat0_{year}.txt"
         rapidity_cat1_path = parent / f"{stem}_rapidity_cat1_{year}.txt"
         rapidity_cat2_path = parent / f"{stem}_rapidity_cat2_{year}.txt"
+        rapidity_cat3_path = parent / f"{stem}_rapidity_cat3_{year}.txt"
+        rapidity_cat4_path = parent / f"{stem}_rapidity_cat4_{year}.txt"
+        rapidity_cat5_path = parent / f"{stem}_rapidity_cat5_{year}.txt"
         ptj0_cat0_path = parent / f"{stem}_ptj0_cat0_{year}.txt"
         ptj0_cat1_path = parent / f"{stem}_ptj0_cat1_{year}.txt"
         ptj0_cat2_path = parent / f"{stem}_ptj0_cat2_{year}.txt"
+        ptj0_cat3_path = parent / f"{stem}_ptj0_cat3_{year}.txt"
+        ptj0_cat4_path = parent / f"{stem}_ptj0_cat4_{year}.txt"
+        ptj0_cat5_path = parent / f"{stem}_ptj0_cat5_{year}.txt"
         DPhiJ0J1_cat0_path = parent / f"{stem}_DPhiJ0J1_cat0_{year}.txt"
         DPhiJ0J1_cat1_path = parent / f"{stem}_DPhiJ0J1_cat1_{year}.txt"
         DPhiJ0J1_cat2_path = parent / f"{stem}_DPhiJ0J1_cat2_{year}.txt"
-        CosThetaStarCS_cat0_path = parent / f"{stem}_CosThetaStarCS_cat0_{year}.txt"
-        CosThetaStarCS_cat1_path = parent / f"{stem}_CosThetaStarCS_cat1_{year}.txt"
-        CosThetaStarCS_cat2_path = parent / f"{stem}_CosThetaStarCS_cat2_{year}.txt"
-        MassJ0J1_cat0_path = parent / f"{stem}_MassJ0J1_cat0_{year}.txt"
-        MassJ0J1_cat1_path = parent / f"{stem}_MassJ0J1_cat1_{year}.txt"
-        MassJ0J1_cat2_path = parent / f"{stem}_MassJ0J1_cat2_{year}.txt"
+        DPhiJ0J1_cat3_path = parent / f"{stem}_DPhiJ0J1_cat3_{year}.txt"
+        DPhiJ0J1_cat4_path = parent / f"{stem}_DPhiJ0J1_cat4_{year}.txt"
+        DPhiJ0J1_cat5_path = parent / f"{stem}_DPhiJ0J1_cat5_{year}.txt"
         write_binned_counts_txt(
             pth_cat0_path,
             "# PTH bins (column pt); sum of Poisson weights per bin per replica",
@@ -469,6 +451,24 @@ def main() -> None:
             "# PTH bins (column pt); sum of Poisson weights per bin per replica",
             edges_pth,
             replica_counts_pth_cat2,
+        )
+        write_binned_counts_txt(
+            pth_cat3_path,
+            "# PTH bins (column pt); sum of Poisson weights per bin per replica",
+            edges_pth,
+            replica_counts_pth_cat3,
+        )
+        write_binned_counts_txt(
+            pth_cat4_path,
+            "# PTH bins (column pt); sum of Poisson weights per bin per replica",
+            edges_pth,
+            replica_counts_pth_cat4,
+        )
+        write_binned_counts_txt(
+            pth_cat5_path,
+            "# PTH bins (column pt); sum of Poisson weights per bin per replica",
+            edges_pth,
+            replica_counts_pth_cat5,
         )
         write_binned_counts_txt(
             nj_cat0_path,
@@ -489,6 +489,24 @@ def main() -> None:
             replica_counts_nj_cat2,
         )
         write_binned_counts_txt(
+            nj_cat3_path,
+            "# NJ bins (column NJ); sum of Poisson weights per bin per replica",
+            edges_nj,
+            replica_counts_nj_cat3,
+        )
+        write_binned_counts_txt(
+            nj_cat4_path,
+            "# NJ bins (column NJ); sum of Poisson weights per bin per replica",
+            edges_nj,
+            replica_counts_nj_cat4,
+        )
+        write_binned_counts_txt(
+            nj_cat5_path,
+            "# NJ bins (column NJ); sum of Poisson weights per bin per replica",
+            edges_nj,
+            replica_counts_nj_cat5,
+        )
+        write_binned_counts_txt(
             rapidity_cat0_path,
             "# Rapidity bins (column rapidity); sum of Poisson weights per bin per replica",
             edges_rapidity,
@@ -505,6 +523,24 @@ def main() -> None:
             "# Rapidity bins (column rapidity); sum of Poisson weights per bin per replica",
             edges_rapidity,
             replica_counts_rapidity_cat2,
+        )
+        write_binned_counts_txt(
+            rapidity_cat3_path,
+            "# Rapidity bins (column rapidity); sum of Poisson weights per bin per replica",
+            edges_rapidity,
+            replica_counts_rapidity_cat3,
+        )
+        write_binned_counts_txt(
+            rapidity_cat4_path,
+            "# Rapidity bins (column rapidity); sum of Poisson weights per bin per replica",
+            edges_rapidity,
+            replica_counts_rapidity_cat4,
+        )
+        write_binned_counts_txt(
+            rapidity_cat5_path,
+            "# Rapidity bins (column rapidity); sum of Poisson weights per bin per replica",
+            edges_rapidity,
+            replica_counts_rapidity_cat5,
         )
         write_binned_counts_txt(
             ptj0_cat0_path,
@@ -525,6 +561,24 @@ def main() -> None:
             replica_counts_ptj0_cat2,
         )
         write_binned_counts_txt(
+            ptj0_cat3_path,
+            "# PTJ0 bins (column PTJ0); sum of Poisson weights per bin per replica",
+            edges_ptj0,
+            replica_counts_ptj0_cat3,
+        )
+        write_binned_counts_txt(
+            ptj0_cat4_path,
+            "# PTJ0 bins (column PTJ0); sum of Poisson weights per bin per replica",
+            edges_ptj0,
+            replica_counts_ptj0_cat4,
+        )
+        write_binned_counts_txt(
+            ptj0_cat5_path,
+            "# PTJ0 bins (column PTJ0); sum of Poisson weights per bin per replica",
+            edges_ptj0,
+            replica_counts_ptj0_cat5,
+        )
+        write_binned_counts_txt(
             DPhiJ0J1_cat0_path,
             "# DPhiJ0J1 bins (column DPhiJ0J1); sum of Poisson weights per bin per replica",
             edges_DPhiJ0J1,
@@ -543,63 +597,54 @@ def main() -> None:
             replica_counts_DPhiJ0J1_cat2,
         )
         write_binned_counts_txt(
-            CosThetaStarCS_cat0_path,
-            "# CosThetaStarCS bins (column CosThetaStarCS); sum of Poisson weights per bin per replica",
-            edges_CosThetaStarCS,
-            replica_counts_CosThetaStarCS_cat0,
+            DPhiJ0J1_cat3_path,
+            "# DPhiJ0J1 bins (column DPhiJ0J1); sum of Poisson weights per bin per replica",
+            edges_DPhiJ0J1,
+            replica_counts_DPhiJ0J1_cat3,
         )
         write_binned_counts_txt(
-            CosThetaStarCS_cat1_path,
-            "# CosThetaStarCS bins (column CosThetaStarCS); sum of Poisson weights per bin per replica",
-            edges_CosThetaStarCS,
-            replica_counts_CosThetaStarCS_cat1,
+            DPhiJ0J1_cat4_path,
+            "# DPhiJ0J1 bins (column DPhiJ0J1); sum of Poisson weights per bin per replica",
+            edges_DPhiJ0J1,
+            replica_counts_DPhiJ0J1_cat4,
         )
         write_binned_counts_txt(
-            CosThetaStarCS_cat2_path,
-            "# CosThetaStarCS bins (column CosThetaStarCS); sum of Poisson weights per bin per replica",
-            edges_CosThetaStarCS,
-            replica_counts_CosThetaStarCS_cat2,
-        )
-        write_binned_counts_txt(
-            MassJ0J1_cat0_path,
-            "# MassJ0J1 bins (column MassJ0J1); sum of Poisson weights per bin per replica",
-            edges_MassJ0J1,
-            replica_counts_MassJ0J1_cat0,
-        )
-        write_binned_counts_txt(
-            MassJ0J1_cat1_path,
-            "# MassJ0J1 bins (column MassJ0J1); sum of Poisson weights per bin per replica",
-            edges_MassJ0J1,
-            replica_counts_MassJ0J1_cat1,
-        )
-        write_binned_counts_txt(
-            MassJ0J1_cat2_path,
-            "# MassJ0J1 bins (column MassJ0J1); sum of Poisson weights per bin per replica",
-            edges_MassJ0J1,
-            replica_counts_MassJ0J1_cat2,
+            DPhiJ0J1_cat5_path,
+            "# DPhiJ0J1 bins (column DPhiJ0J1); sum of Poisson weights per bin per replica",
+            edges_DPhiJ0J1,
+            replica_counts_DPhiJ0J1_cat5,
         )
 
         print(f"PTH-cat0-binned output : {pth_cat0_path}")
         print(f"PTH-cat1-binned output : {pth_cat1_path}")
         print(f"PTH-cat2-binned output : {pth_cat2_path}")
+        print(f"PTH-cat3-binned output : {pth_cat3_path}")
+        print(f"PTH-cat4-binned output : {pth_cat4_path}")
+        print(f"PTH-cat5-binned output : {pth_cat5_path}")
         print(f"NJ-cat0-binned output : {nj_cat0_path}")
         print(f"NJ-cat1-binned output : {nj_cat1_path}")
         print(f"NJ-cat2-binned output : {nj_cat2_path}")
+        print(f"NJ-cat3-binned output : {nj_cat3_path}")
+        print(f"NJ-cat4-binned output : {nj_cat4_path}")
+        print(f"NJ-cat5-binned output : {nj_cat5_path}")
         print(f"Rapidity-cat0-binned output : {rapidity_cat0_path}")
         print(f"Rapidity-cat1-binned output : {rapidity_cat1_path}")
         print(f"Rapidity-cat2-binned output : {rapidity_cat2_path}")
+        print(f"Rapidity-cat3-binned output : {rapidity_cat3_path}")
+        print(f"Rapidity-cat4-binned output : {rapidity_cat4_path}")
+        print(f"Rapidity-cat5-binned output : {rapidity_cat5_path}")
         print(f"PTJ0-cat0-binned output : {ptj0_cat0_path}")
         print(f"PTJ0-cat1-binned output : {ptj0_cat1_path}")
         print(f"PTJ0-cat2-binned output : {ptj0_cat2_path}")
+        print(f"PTJ0-cat3-binned output : {ptj0_cat3_path}")
+        print(f"PTJ0-cat4-binned output : {ptj0_cat4_path}")
+        print(f"PTJ0-cat5-binned output : {ptj0_cat5_path}")
         print(f"DPhiJ0J1-cat0-binned output : {DPhiJ0J1_cat0_path}")
         print(f"DPhiJ0J1-cat1-binned output : {DPhiJ0J1_cat1_path}")
         print(f"DPhiJ0J1-cat2-binned output : {DPhiJ0J1_cat2_path}")
-        print(f"CosThetaStarCS-cat0-binned output : {CosThetaStarCS_cat0_path}")
-        print(f"CosThetaStarCS-cat1-binned output : {CosThetaStarCS_cat1_path}")
-        print(f"CosThetaStarCS-cat2-binned output : {CosThetaStarCS_cat2_path}")
-        print(f"MassJ0J1-cat0-binned output : {MassJ0J1_cat0_path}")
-        print(f"MassJ0J1-cat1-binned output : {MassJ0J1_cat1_path}")
-        print(f"MassJ0J1-cat2-binned output : {MassJ0J1_cat2_path}")
+        print(f"DPhiJ0J1-cat3-binned output : {DPhiJ0J1_cat3_path}")
+        print(f"DPhiJ0J1-cat4-binned output : {DPhiJ0J1_cat4_path}")
+        print(f"DPhiJ0J1-cat5-binned output : {DPhiJ0J1_cat5_path}")
 
 
 if __name__ == "__main__":

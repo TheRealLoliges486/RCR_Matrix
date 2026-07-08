@@ -26,9 +26,9 @@ XS = {
 BR = 0.00227
 OUTPUT_TXT = "fiducial_acceptance.txt"
 
-TARGET_OBS = {"NJ", "PTH", "PTJ0", "YH", "DPhiJ0J1"}
+TARGET_OBS = {"NJ", "PTH", "PTJ0", "YH", "DPhiJ0J1", "CosThetaStarCS", "MassJ0J1", "PTJ1", "YJ0"}
 TARGET_MODES = {"ggH", "VBFH", "VH", "ttH"}
-FILE_RE = re.compile(r"^fidXS_(?P<obs>NJ|PTH|PTJ0|YH|DPhiJ0J1)_(?P<mode>ggH|VBFH|VH|ttH)\.py$")
+FILE_RE = re.compile(r"^fidXS_(?P<obs>NJ|PTH|PTJ0|YH|DPhiJ0J1|CosThetaStarCS|MassJ0J1|PTJ1|YJ0)_(?P<mode>ggH|VBFH|VH|ttH)\.py$")
 
 
 def load_python_module(path: Path):
