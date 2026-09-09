@@ -11,3 +11,4 @@ fiducial_acceptance.txt
 *.txt
 __pycache__/
 */__pycache__/
+plots
