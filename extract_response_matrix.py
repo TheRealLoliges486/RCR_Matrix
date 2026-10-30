@@ -334,7 +334,7 @@ def plot_matrix(
     """Plot with the same style conventions used in correlation_matrix.ipynb."""
     if hep is not None:
         hep.style.use("CMS")
-    fig, ax = plt.subplots(figsize=(12, 10), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=(24, 16), constrained_layout=True)
 
     if sns is not None:
         palette = sns.diverging_palette(240, 10, n=20, as_cmap=True)
@@ -347,7 +347,7 @@ def plot_matrix(
             square=True,
             xticklabels=reco_bins,
             yticklabels=gen_bins,
-            annot_kws={"size": 10, "weight": "bold"},
+            annot_kws={"size": 16, "weight": "bold"},
             cbar_kws={"label": "Response"},
         )
     else:

@@ -16,9 +16,9 @@ except ImportError:
 YEARS = ["2022", "2023", "2024"]
 
 INPUT_DIRS = {
-    "2022": "/pnfs/psi.ch/cms/trivcat/store/user/niharrin/ntuples/midRun3/samples/2026_04_27_with_Zmmg_SaS/data/2022",
-    "2023": "/pnfs/psi.ch/cms/trivcat/store/user/niharrin/ntuples/midRun3/samples/2026_04_27_with_Zmmg_SaS/data/2023",
-    "2024": "/pnfs/psi.ch/cms/trivcat/store/user/niharrin/ntuples/midRun3/samples/2026_04_27_with_Zmmg_SaS/data/2024"
+    "2022": "/pnfs/psi.ch/cms/trivcat/store/user/niharrin/ntuples/midRun3/samples/2026_07_22_with_Zmmg_SaS_DPhiJ0J1Fix_smoothed_decorrelation/data/2022",
+    "2023": "/pnfs/psi.ch/cms/trivcat/store/user/niharrin/ntuples/midRun3/samples/2026_07_22_with_Zmmg_SaS_DPhiJ0J1Fix_smoothed_decorrelation/data/2023",
+    "2024": "/pnfs/psi.ch/cms/trivcat/store/user/niharrin/ntuples/midRun3/samples/2026_07_22_with_Zmmg_SaS_DPhiJ0J1Fix_smoothed_decorrelation/data/2024"
 }
 
 BINS_PTH = [0, 5, 10, 15, 20, 25, 30, 35, 45, 60, 80, 100, 120, 140, 170, 200, 250, 350, 450, 10000]
@@ -49,7 +49,7 @@ CAT_RAPIDITY = {
     "2024": [0.0195, 0.0225, 0.0315]
 }
 
-CAT_VAR = "sigma_m_over_m_smeared_decorr"
+CAT_VAR = "sigma_m_over_m_smeared_decorr_smoothed"
 
 MVA = {
     "2022": 0.25,
